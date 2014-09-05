@@ -68,7 +68,7 @@ module HasOffers
         @body = response.body
       else
         @test = false
-        @body = Yajl::Parser.parse(response.body)
+        @body = parse_response(response)
       end
       @http_status_code = response.code
       @http_message = response.message
@@ -89,6 +89,22 @@ module HasOffers
       elsif obj.is_a? Array
         obj.map { |error| error["err_msg"] || error["publicMessage"] }
       end
+    end
+
+    def parse_response(response)
+      Yajl::Parser.parse(response.body)
+    rescue Yajl::ParseError
+      error_response("#{response.code} #{response.message}")
+    end
+
+    def error_response(message)
+      {
+        'response' => {
+          'data' => nil,
+          'errors' => message,
+          'status' => 0
+        }
+      }
     end
   end
 end
